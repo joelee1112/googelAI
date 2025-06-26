@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "index_minimal.py",
+      "src": "app.py",
       "use": "@vercel/python",
       "config": { 
         "maxLambdaSize": "15mb", 
@@ -11,19 +11,8 @@
   ],
   "routes": [
     {
-      "src": "/webhook",
-      "dest": "index_minimal.py"
-    },
-    {
-      "src": "/status", 
-      "dest": "index_minimal.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "index_minimal.py"
+      "dest": "app.py"
     }
-  ],
-  "env": {
-    "PYTHONPATH": "."
-  }
+  ]
 }
