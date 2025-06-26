@@ -69,10 +69,20 @@ from apps.calendar.main import calendarMain
 # from apps.readGoogleSheetsCsv.keywordReply import keywordReply, keywordSet
 # from apps.readGoogleSheetsCsv.badJoke import badJoke
 
-line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
-line_handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
+# 環境變數檢查和錯誤處理
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 
-mant0u_bot_model = os.getenv("MANT0U_BOT_MODEL")
+if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_CHANNEL_SECRET:
+    print("警告：LINE Bot 環境變數未設定")
+    # 在開發環境中可以設定預設值，生產環境中會使用實際的環境變數
+    LINE_CHANNEL_ACCESS_TOKEN = LINE_CHANNEL_ACCESS_TOKEN or "default_token"
+    LINE_CHANNEL_SECRET = LINE_CHANNEL_SECRET or "default_secret"
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+line_handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
+mant0u_bot_model = os.getenv("MANT0U_BOT_MODEL", "default")
 
 app = Flask(__name__)
 
@@ -97,17 +107,22 @@ def callback():
     try:
         line_handler.handle(body, signature)
     except InvalidSignatureError:
+        print("Invalid signature error")
         abort(400)
+    except Exception as e:
+        print(f"Webhook error: {str(e)}")
+        # 記錄錯誤但不中斷服務
+        return 'ERROR', 500
     return 'OK'
 
 # 文字訊息
 @line_handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    try:
+        # 取得「使用者」訊息
+        userMessage = event.message.text
 
-    # 取得「使用者」訊息
-    userMessage = event.message.text
-
-    print(userMessage)
+        print(userMessage)
 
     # if mant0u_bot_model == "private":
         # print(userMessage)
@@ -366,18 +381,28 @@ def handle_message(event):
             #「是不是、好不好、對不對、有沒有」句型
             if check_yes_or_no(userMessage): 
                 YesNo_text_message = random_yes_or_no_main_return(userMessage)
-                reply_message_line.append(YesNo_text_message)
-                line_bot_api.reply_message(event.reply_token, reply_message_line)
+                reply_message_line.append(YesNo_text_message)                line_bot_api.reply_message(event.reply_token, reply_message_line)
         else:
             #「是不是、好不好、對不對、有沒有」句型
             if check_yes_or_no(userMessage): 
                 random_yes_or_no_main(event, userMessage)
 
-    # 主選單
-    if userMessage == '饅頭':
-        mant0u_bot_main(event)
-    elif userMessage == '指令說明':
-        mant0u_bot_instructions(event)
+        # 主選單
+        if userMessage == '饅頭':
+            mant0u_bot_main(event)
+        elif userMessage == '指令說明':
+            mant0u_bot_instructions(event)
+    
+    except Exception as e:
+        print(f"Message handling error: {str(e)}")
+        # 發送簡單的錯誤回覆，避免讓用戶看到系統錯誤
+        try:
+            error_message = TextSendMessage(text="系統處理中發生錯誤，請稍後再試。")
+            line_bot_api.reply_message(event.reply_token, error_message)
+        except:
+            pass  # 如果連錯誤回覆都失敗，就忽略
+        except:
+            pass  # 如果連錯誤回覆都失敗，就忽略
 
 
 # Postback

@@ -1,6 +1,6 @@
 Flask==2.2.2
 werkzeug==2.2.2
-line-bot-sdk
+line-bot-sdk==3.5.0
 # Pillow
 googletrans==3.1.0a0
 bs4
@@ -9,3 +9,4 @@ zhdate
 zhconv
 # pandas
 firebase_admin
+requests

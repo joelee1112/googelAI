@@ -1,15 +1,29 @@
 {
   "builds": [
     {
-      "src": "index.py",
+      "src": "index_minimal.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
+      "config": { 
+        "maxLambdaSize": "15mb", 
+        "runtime": "python3.9"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/webhook",
+      "dest": "index_minimal.py"
+    },
+    {
+      "src": "/status", 
+      "dest": "index_minimal.py"
+    },
+    {
       "src": "/(.*)",
-      "dest": "index.py"
+      "dest": "index_minimal.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  }
 }
